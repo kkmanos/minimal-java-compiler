@@ -1,0 +1,122 @@
+/* Simple +/-/* expression language; parser evaluates constant expressions on the fly*/
+/**
+ *  Package and Import Specifications
+ */
+import java_cup.runtime.*;
+
+/**
+ *  Usercode Components
+ */
+parser code {:
+    // Connect this parser to a scanner!
+    Scanner s;
+    Parser(Scanner s){ this.s=s; }
+
+    public static void print(String s) {
+        System.out.println(s);
+    }
+:}
+
+/* define how to connect to the scanner! */
+scan with {: return s.next_token(); :};
+
+/**
+ *  Symbol Lists
+ */
+
+/* Terminals (tokens returned by the scanner). */
+terminal            PREFIX, SUFFIX, COMA, LPAREN, RPAREN;
+terminal            PLUS, LBRACE, RBRACE, IF, ELSE;
+terminal String     ID, STRING_LITERAL;
+
+
+/*  Non terminals */
+non terminal            program;
+non terminal String    def_list, fun_def, body, input, call;
+non terminal String    bexpr, stmt_list, arglist, arg, fname, param_list;
+non terminal String    id_list, stmt, ifelse, cond;
+
+/**
+ *  Precedence defarations
+ */
+
+
+//precedence left ID;
+precedence left PLUS;
+precedence left RPAREN;
+precedence left LBRACE, RBRACE;
+precedence left COMA;
+
+/**
+ *  The Grammar Rules
+ */
+
+
+start with program;
+
+
+program  ::= input:inp {:
+			System.out.printf("\npublic class Main {\n");
+			//System.out.printf("\tpublic static void main(String[] args) {\n");
+      System.out.printf("%s\n", inp);
+			System.out.printf("}\n");
+			 :};
+
+input ::= def_list:dl          {: RESULT = dl; :}
+       |  stmt_list:sl         {: RESULT = String.format("\tpublic static void main(String[] args) {\n%s\n\t}\n", sl); :}
+       |  def_list:dl stmt_list:sl   {: RESULT = dl + String.format("\tpublic static void main(String[] args) {\n%s\n\t}\n", sl); :}
+       |                     {: RESULT = ""; :}
+       ;
+
+def_list ::= def_list:dl fun_def:fd              {: RESULT = String.format("%s\n%s\n", dl, fd); :}
+          | fun_def:fd                           {: RESULT = String.format("%s\n", fd); :}
+          ;
+
+stmt_list ::= stmt_list:sl stmt:s                {: RESULT = String.format("%s\n\t\tSystem.out.println(%s);\n", sl, s); :}
+           |  stmt:s                             {: RESULT = String.format("\t\tSystem.out.println(%s);\n", s);  :}
+           ;
+
+stmt ::= call:c                    {: RESULT = c; :}
+       | STRING_LITERAL:s          {: RESULT = String.format("\"%s\"", s); :}
+       | ID:i                      {: RESULT = i; :}
+       | stmt:s1 PLUS stmt:s2           {: RESULT = s1 + " + " + s2; :}
+       | ifelse:ife                       {: RESULT = ife; :}
+       ;
+
+fname ::= ID:n LPAREN   {: RESULT = n; :}
+       ;
+
+fun_def ::= fname:fn param_list:pl stmt:st RBRACE    {: RESULT = "\tpublic static String " + fn + "(" + pl + "){\n\t\treturn " + st + ";\n\t}\n"; :}
+         | fname:fn RPAREN LBRACE stmt:st RBRACE         {:   RESULT = "\tpublic static String " + fn + "(" + "){\n\t\treturn " + st + ";\n\t}\n"; :}
+         ;
+
+// param_list supplies the "){" string at the end
+param_list ::= ID:i COMA param_list:pl    {: RESULT = "String " + i  + ", " + pl; :}
+            |  ID:i RPAREN LBRACE         {: RESULT = "String " + i; :}
+            ;
+
+
+call ::= fname:fn arglist:a    {: RESULT = fn + "(" + a + ")"; :}
+      |  fname:fn RPAREN      {:  RESULT = fn + "(" + ")"; :}
+      ;
+
+
+
+// arglist supplies the  ")" string at the end
+arglist ::= ID:i COMA arglist:a                         {: RESULT = i + ", " + a;  :}
+         |  ID:i RPAREN                                 {: RESULT = i; :}
+         |  STRING_LITERAL:s COMA arglist:al            {: RESULT = String.format("\"%s\", %s", s, al); :}
+         |  STRING_LITERAL:s RPAREN                     {: RESULT = String.format("\"%s\"", s);; :}
+         |  call:c COMA arglist:al                      {: RESULT = c + ", " + al; :}
+         |  call:c RPAREN                               {: RESULT = c; :}
+         |  stmt:st COMA arglist:al                     {: RESULT = st + ", " + al; :}
+         |  stmt:st RPAREN                                 {: RESULT = st; :}
+         ;
+
+
+cond ::= stmt:s1 PREFIX stmt:s2    {: RESULT = String.format("(%s).startsWith(%s)", s2, s1); :}
+       | stmt:s1 SUFFIX stmt:s2    {: RESULT = String.format("(%s).endsWith(%s)", s2, s1); :}
+       ;
+
+ifelse ::= IF LPAREN cond:c RPAREN stmt:s1 ELSE stmt:s2  {: RESULT = String.format("((%s) ? %s : %s)", c, s1, s2); :}
+        ;

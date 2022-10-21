@@ -7,7 +7,7 @@ class Main {
 		beta = new B();
 		System.out.println(beta.foo());
 		System.out.println(beta.printAll());
-		if (beta.fa()) {
+		if (1 < 2) {
 			System.out.println(500);
 		}
 		else {
@@ -26,14 +26,7 @@ class A {
 			j = 300;
 			return 1;
 		}
-		public boolean fa() {
-			if (i > j) {
-				return true;
-			} 
-			else {
-				return false;
-			}
-		}
+
 }
 
 class B extends A {

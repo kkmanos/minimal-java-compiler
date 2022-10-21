@@ -1,0 +1,121 @@
+@.A_vtable = global [2 x i8*] [i8* bitcast (i32 (i8*)* @A.foo__ to i8*), i8* bitcast (i1 (i8*)* @A.fa__ to i8*)]
+@.B_vtable = global [4 x i8*] [i8* bitcast (i32 (i8*)* @A.foo__ to i8*), i8* bitcast (i1 (i8*)* @A.fa__ to i8*), i8* bitcast (i1 (i8*)* @B.bla__ to i8*), i8* bitcast (i32 (i8*)* @B.printAll__ to i8*)]
+
+
+declare i8* @calloc(i32, i32)
+declare i32 @printf(i8*, ...)
+declare void @exit(i32)
+@_cint = constant [4 x i8] c"%d\0a\00"
+@_cOOB = constant [15 x i8] c"Out of bounds\0a\00"
+define void @print_int(i32 %i) {
+  %_str = bitcast [4 x i8]* @_cint to i8*
+  call i32 (i8*, ...) @printf(i8* %_str, i32 %i)
+  ret void
+}
+define void @throw_oob() {
+  %_str = bitcast [15 x i8]* @_cOOB to i8*
+  call i32 (i8*, ...) @printf(i8* %_str)
+  call void @exit(i32 1)
+  ret void
+}
+
+
+
+
+
+define i32 @main() {
+%_Main.main__.beta = alloca i8*   ; A beta
+
+
+; assignment statement follows
+
+; Allocating object
+%_0 = call i8* @calloc(i32 1, i32 29)
+%_1 = bitcast i8* %_0 to i8***
+%_2 = getelementptr [4 x i8*], [4 x i8*]* @.B_vtable, i32 0, i32 0
+store i8** %_2, i8*** %_1
+
+store i8* %_0, i8** %_Main.main__.beta
+%_3 = load i8*, i8** %_Main.main__.beta
+
+; method call
+%_5 = bitcast i8* %_3 to i8***
+%_6 = load i8**, i8*** %_5
+%_7 = getelementptr i8*, i8** %_6, i32 0
+%_8 = load i8*, i8** %_7
+%_9 = bitcast i8* %_8 to i32 (i8*)*
+%_10 = call i32 %_9(i8* %_3)
+call void @print_int(i32 %_10)
+
+%_11 = load i8*, i8** %_Main.main__.beta
+
+; method call
+%_13 = bitcast i8* %_11 to i8***
+%_14 = load i8**, i8*** %_13
+%_15 = getelementptr i8*, i8** %_14, i32 3
+%_16 = load i8*, i8** %_15
+%_17 = bitcast i8* %_16 to i32 (i8*)*
+%_18 = call i32 %_17(i8* %_11)
+call void @print_int(i32 %_18)
+
+ret i32 0
+}
+define i32 @A.foo__(i8* %this) {
+
+
+; assignment statement follows
+%_19 = or i32 0, 200
+%_20 = getelementptr i8, i8* %this, i32 8
+%_21 = bitcast i8* %_20 to i32*
+store i32 %_19, i32* %_21
+
+
+; assignment statement follows
+%_22 = or i1 0, 0
+%_23 = getelementptr i8, i8* %this, i32 12
+%_24 = bitcast i8* %_23 to i1*
+store i1 %_22, i1* %_24
+
+
+; assignment statement follows
+%_25 = or i32 0, 300
+%_26 = getelementptr i8, i8* %this, i32 13
+%_27 = bitcast i8* %_26 to i32*
+store i32 %_25, i32* %_27
+%_28 = or i32 0, 1
+ret i32 %_28
+}
+
+
+
+define i1 @A.fa__(i8* %this) {
+%_29 = or i1 0, 1
+ret i1 %_29
+}
+
+
+
+define i1 @B.bla__(i8* %this) {
+%_30 = or i1 0, 1
+ret i1 %_30
+}
+
+
+
+define i32 @B.printAll__(i8* %this) {
+%_31 = getelementptr i8, i8* %this, i32 8
+%_32 = bitcast i8* %_31 to i32*
+%_33 = load i32, i32* %_32
+call void @print_int(i32 %_33)
+
+%_34 = getelementptr i8, i8* %this, i32 13
+%_35 = bitcast i8* %_34 to i32*
+%_36 = load i32, i32* %_35
+call void @print_int(i32 %_36)
+
+%_37 = or i32 0, 1
+ret i32 %_37
+}
+
+
+

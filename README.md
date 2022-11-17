@@ -1,7 +1,7 @@
 
 
-# COMPILERS ASSIGNMENT
-# KOUKOULARIS EMMANOUIL - sdi1700262
+# Minimal Java Compiler 
+#### Koukoularis Emmanouil - sdi1700262
 
 
 
